@@ -1,0 +1,163 @@
+```{R}
+space = read_csv("train.csv")
+view(space)
+```
+
+```{R}
+#What are the age characteristics of the passengers on the voyage?
+space %>%
+  summarize(mean_age = mean(Age, na.rm = TRUE), minimum_age = min(Age, na.rm = TRUE), 
+            quartile_1 = quantile(Age, .25, na.rm = TRUE), median_age = 
+            median(Age, na.rm = TRUE), quartile_3 = quantile(Age, .75, na.rm = TRUE), 
+            max_age = max(Age, na.rm = TRUE))
+```
+
+```{R}
+#Q: Is there a relationship between age group and travel destination?
+space %>%
+  group_by(Destination) %>%
+  summarize(mean_age = mean(Age, na.rm = TRUE))
+
+#A: No
+```
+
+```{R}
+#Q: Is there a difference in age group between people who were transported and people who were not?
+space %>%
+  group_by(Transported) %>%
+  summarize(mean_age = mean(Age, na.rm = TRUE), median_age = median(Age, na.rm = TRUE))
+
+#A: Those who were transported were slightly older
+```
+
+```{R}
+#Who were the top spenders? How much did they spend in total? Was there a
+#relationship between total spent and home planet? Was there a relationship 
+#between total spent and destination planet? Were high spenders typically VIPs?
+
+space %>%
+  filter(CryoSleep == FALSE) %>%
+  mutate(total_spent = RoomService + FoodCourt + ShoppingMall + Spa + VRDeck) %>%
+  select(Name, total_spent, HomePlanet, Destination, VIP) %>%
+  arrange(desc(total_spent))
+
+#Aliens from Europa represented the vast majority of top spenders.  The most
+#common destinations for top spenders were TRAPPIST-1e and 55 Cancri e. Most top
+#spenders were not VIPs.
+```
+
+```{R}
+#Q: Do Europans seem to spend the most because there are more aliens from 
+#Europa than from Earth or Mars?
+
+space %>%
+  group_by(HomePlanet) %>%
+  summarise(count = n()) %>%
+  mutate(proportion = count/sum(count))
+
+#A: No. There are more than double the number of Earthlings as there are 
+#Europans, and there are almost as many Marsians as there are Europans. So 
+#Europa might be a significantly wealthier planet than Earth or Mars.
+```
+
+```{R}
+#What is the average difference in spending between members of the three planets?
+
+space %>%
+  group_by(HomePlanet) %>%
+  filter(CryoSleep == FALSE) %>%
+  mutate(total_spent = RoomService + FoodCourt + ShoppingMall + Spa + VRDeck) %>%
+  summarize(mean_spending = mean(total_spent, na.rm = TRUE))
+
+#Europans spent the most ($6,294.70), followed by Marsians ($1,751.07),
+#followed by Earthlings ($990.79)
+```
+
+```{R}
+#Compare the difference in proportion of passengers who spent the voyage in 
+#cryosleep by Home Planet
+
+space %>%
+  group_by(HomePlanet) %>%
+  summarize(proportion_in_cryo = mean(CryoSleep == TRUE, na.rm = TRUE))
+
+#A higher proportion of Europans spent the trip in cryosleep than
+#Earthlings or Marsians.
+```
+
+```{R}
+#Which services did passengers spend the most money on?
+space %>%
+  summarize(sum(RoomService, na.rm = TRUE), sum(FoodCourt, na.rm = TRUE), sum(ShoppingMall, na.rm = TRUE), sum(Spa, na.rm = TRUE), 
+            sum(VRDeck, na.rm = TRUE))
+
+service <- c("Room Service", "Food Court", "Shopping Mall", "Spa", "VR Deck")
+sum_service <- c(1912541, 3898237, 1474092, 2647791, 2592790)
+
+services <- data.frame(service, sum_service)
+arrange(services, desc(sum_service))
+
+```
+
+```{R}
+#What were the relative proportions of VIPs to non-VIPs?
+space %>%
+  group_by(VIP) %>%
+  summarize(count = n()) %>%
+  mutate(proportion = count/sum(count, na.rm = TRUE))
+
+#VIPs made up about 2.3% of passengers
+```
+
+```{R}
+#What was the average difference in spending among VIPs vs non VIPs?
+space %>%
+  group_by(VIP) %>%
+  filter(CryoSleep == FALSE) %>%
+  mutate(total_spent = RoomService + FoodCourt + ShoppingMall + Spa + VRDeck) %>%
+  summarize(mean_spent = mean(total_spent, na.rm = TRUE))
+
+#VIPs spent more than double the amount of money as non-VIPs
+```
+
+```{R}
+#Which activities did passengers spend the most money on by home planet?
+space %>%
+  group_by(HomePlanet) %>%
+  summarize(sum(RoomService, na.rm = TRUE), sum(FoodCourt, na.rm = TRUE), sum(ShoppingMall, na.rm = TRUE), sum(Spa, na.rm = TRUE), 
+            sum(VRDeck, na.rm = TRUE))
+```
+
+```{R}
+#Overall spending patterns by age
+spending_by_age <- space %>%
+  mutate(total_spent = RoomService + FoodCourt + ShoppingMall + Spa + VRDeck) %>%
+  filter(Age > 12) %>%
+  group_by(Age) %>%
+  summarize(mean_spending = mean(total_spent, na.rm = TRUE), count = n()) %>%
+  filter(count >= 5)
+spending_by_age
+```
+
+```{R}
+#Which activities did passengers spend the most money on by age?
+service_by_age <- space %>%
+  filter(Age > 12) %>%
+  group_by(Age) %>%
+  summarize(Room_Service = 
+            mean(RoomService, na.rm = TRUE), Food_Court = mean(FoodCourt, na.rm = TRUE), 
+            Shopping_Mall = mean(ShoppingMall, na.rm = TRUE), Spa = mean(Spa, na.rm = TRUE), 
+            VRDeck = mean(VRDeck, na.rm = TRUE))
+service_by_age
+```
+
+
+```{R}
+#Where did passengers travel to by home planet?
+space %>%
+  select(HomePlanet, Destination) %>%
+  group_by(HomePlanet, Destination) %>%
+  summarize(count = n())
+```
+
+
